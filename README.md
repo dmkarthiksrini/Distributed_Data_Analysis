@@ -15,11 +15,12 @@ This project lies in the field of finance notable retail banking, and the main o
 
 2. Contributing
 
-   1. Fork the Project
+   1. Fork/Clone the Project
    2. Create your Feature Branch (git checkout -b phase/AmazingMilestone)
    3. Commit your Changes (git commit -m 'Complete data cleaning in Phase1 of data desciption and research question')
    4. Push to your Branch (git push origin feature/AmazingFeature)
-   5. Open a Pull Reques
+   5. Notify other members about the changes (so others can pull in the latest)
+   6. Open a Pull Reques
 
 3. License
    Distributed under the MIT License.
@@ -28,3 +29,4 @@ This project lies in the field of finance notable retail banking, and the main o
    https://github.com/dmkarthiksrini
    https://github.com/palaciosma
    https://github.com/amaboh
+   https://github.com/tanvimathur11
