@@ -20,7 +20,7 @@ This project lies in the field of finance notable retail banking, and the main o
    3. Commit your Changes (git commit -m 'Complete data cleaning in Phase1 of data desciption and research question')
    4. Push to your Branch (git push origin feature/AmazingFeature)
    5. Notify other members about the changes (so others can pull in the latest)
-   6. Open a Pull Reques
+   6. Open a Pull Request
 
 3. License
    Distributed under the MIT License.
