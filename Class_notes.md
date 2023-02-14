@@ -9,10 +9,10 @@
 * Should we focus on the single Problem or multiple Problem?
     * Its Purely based on the Research Question we are focusing on
 
-* Post the Machine Learning Model Phase, collaborate and anlyse the Results
+* Post the Machine Learning Model Phase, collaborate and analyse the Results
     * Produce and develop why each persons analysis is not like others
     * Like how it is different from other analysis in the team
-    * Narrate in each one own word on the Result Ananlysis
+    * Narrate in each one own word on the Result Analysis
 
 
 
@@ -21,7 +21,7 @@
 
 * Go through the Dataset and analyse based on the findings formulate the Research Question
     * What we are going to do (Eg : Our Research is focusing on creating Credit Score for People based on So and So Reason)
-    * What Attributes we are 
+    * What Attributes we are going to consider/ based on what attributes we are going to build our analysis.
 
 
 * Which Machine Learning Models are supposed to be used
