@@ -13,3 +13,27 @@
     * Produce and develop why each persons analysis is not like others
     * Like how it is different from other analysis in the team
     * Narrate in each one own word on the Result Ananlysis
+
+
+
+
+#### Formulating Research Question
+
+* Go through the Dataset and analyse based on the findings formulate the Research Question
+    * What we are going to do (Eg : Our Research is focusing on creating Credit Score for People based on So and So Reason)
+    * What Attributes we are 
+
+
+* Which Machine Learning Models are supposed to be used
+    * Machine Learning Techniques explained in the Alexandaro Module Technique
+
+
+#### Regarding the Machine Learning Models - _Alexandro_ Comments
+
+**Supervised Learning Method**
+
+* NN - Neural Networks
+* Decision Trees
+* Random Forest
+* SVM - Support Vector Machines
+* KNN - K Nearest Neighbours
