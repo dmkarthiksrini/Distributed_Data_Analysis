@@ -26,7 +26,8 @@ This project lies in the field of finance notable retail banking, and the main o
    Distributed under the MIT License.
 
 4. Contributors
-   https://github.com/dmkarthiksrini
-   https://github.com/palaciosma
-   https://github.com/amaboh
-   https://github.com/tanvimathur11
+   * https://github.com/dmkarthiksrini
+   * https://github.com/palaciosma
+   * https://github.com/amaboh
+   * https://github.com/tanvimathur11
+   * https://github.com/nehalgajraj
