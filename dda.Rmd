@@ -12,6 +12,7 @@ Here we should state first what is credit scores, highlight their importance and
 
 Then, the data should be presented, with a table including each ariable and a brief explanation of each (metadata in other words).
 
+
 # 2. Data preparation and cleaning 
 
 The following points will be checked to assess the data quality:
