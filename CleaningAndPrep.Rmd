@@ -1,0 +1,65 @@
+---
+title: "DDA"
+output: html_document
+date: "2023-03-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Any necessary libraries
+
+```{r}
+
+```
+
+```{r}
+df <- read.csv("train.csv")
+```
+
+
+#2. Data preparation an cleaning
+
+The following points will be checked to assess the data quality:
+
+- What type of data are we working with? Are data types correct? Do the values make sense?
+
+Firstly, we can eyeball the data to gain a general idea of what the variables we're working with look like:
+
+```{r}
+str(df)
+```
+As seen, we are dealing with a very heterogeneous dataset, containing both numerical and categorical variables. At first sight, there are some variables we do not really need to answer our research question, so we can proceed to delete them:
+
+```{r}
+df <- df[, -c(2)]
+df <- df[, -c(3)]
+df <- df[, -c(5)]
+
+#Note if any of you consider we can deleter more columns, add them here
+```
+
+Now, to properly elaborate a model later on, the datatypes have to be fixed: most categorical variables are defined as "chr", and so are some numerical variables as well.
+
+```{r}
+summary(df)
+```
+
+
+```{r}
+df$Month <- as.factor(df$Month)
+df$Type_of_Loan <- as.factor(df$Type_of_Loan)
+df$Credit_Mix <- as.factor(df$Credit_Mix)
+df$Payment_of_Min_Amount <- as.factor(df$Payment_of_Min_Amount)
+df$Payment_Behaviour <- as.factor(df$Payment_Behaviour)
+df$Credit_Score <- as.factor(df$Credit_Score)
+```
+
+
+
+Further mistakes can be spotted: Firstly, categorical variables (which are all of them except for "price" and "sqm") are not considered as factors. Moreover, we can see that heating is considered as character, hinting at an error. We can begin by correcting the data types:
+
+- Are there erratic values? Are there more categories than expected for categorical variables?
+
+- Are there any missing values? How am I going to deal with them?
