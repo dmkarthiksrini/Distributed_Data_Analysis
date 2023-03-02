@@ -1,0 +1,104 @@
+---
+title: "DDA"
+output: html_document
+date: "2023-03-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Any necessary libraries
+
+```{r}
+
+```
+
+```{r}
+train <- read.csv("C:/Users/Tanvi/Downloads/Distributed_Data_Analysis-main/Distributed_Data_Analysis-main/CreditScore_Classification_Dataset/train.csv")
+
+test <- read.csv("C:/Users/Tanvi/Downloads/Distributed_Data_Analysis-main/Distributed_Data_Analysis-main/CreditScore_Classification_Dataset/test.csv")
+```
+
+
+#2. Data preparation an cleaning
+
+The following points will be checked to assess the data quality:
+
+- What type of data are we working with? Are data types correct? Do the values make sense?
+
+Firstly, we can eyeball the data to gain a general idea of what the variables we're working with look like:
+
+```{r}
+str(train)
+```
+As seen, we are dealing with a very heterogeneous dataset, containing both numerical and categorical variables. At first sight, there are some variables we do not really need to answer our research question, so we can proceed to delete them:
+
+```{r}
+train <- train[, -c(28)]
+#train <- train[, -c(2)]
+#train <- train[, -c(3)]
+#train <- train[, -c(5)]
+
+#Note if any of you consider we can deleter more columns, add them here
+```
+
+```{r}
+credit_score <- rbind(train, test)
+```
+
+#ID should be unique and numerical, it looks perfect (should we check it or not)
+#Cust Id, name
+#Annual income - _with values
+#monthly inhand income - just Na
+#Num_Bank_Accounts,credit card,interest rate : outliers
+#no of loan : symbol and -ve values
+#delay : -ve values consider turning them to 0
+#no of delay payment: it should be numeric and symbols are there
+#change credit limit:it should be numeric and symbols are there
+#no of inquire: outliers
+#credit mix : discuss
+#outstanding debt:there are symbols, should be numeric
+#credit age:it should be made into months
+#payment of month:factor
+#emi: all okay
+#Amount_invested_monthly: shuld be numeric, discuss the special character and missing values
+#Payment_Behaviour :categorical , missing values with special character
+#Monthly balance: should be numeric, it has missing values 
+
+```{r}
+credit_score
+```
+
+Now, to properly elaborate a model later on, the datatypes have to be fixed: most categorical variables are defined as "chr", and so are some numerical variables as well.
+
+```{r}
+summary(train)
+```
+```{r}
+
+```
+
+
+```{r}
+train$Month <- as.factor(train$Month)
+train$Type_of_Loan <- as.factor(train$Type_of_Loan)
+train$Credit_Mix <- as.factor(train$Credit_Mix)
+train$Payment_of_Min_Amount <- as.factor(train$Payment_of_Min_Amount)
+train$Payment_Behaviour <- as.factor(train$Payment_Behaviour)
+train$Credit_Score <- as.factor(train$Credit_Score)
+```
+
+
+
+Further mistakes can be spotted: Firstly, categorical variables (which are all of them except for "price" and "sqm") are not considered as factors. Moreover, we can see that heating is considered as character, hinting at an error. We can begin by correcting the data types:
+
+- Are there erratic values? Are there more categories than expected for categorical variables?
+
+- Are there any missing values? How am I going to deal with them?
+
+
+```{r}
+
+```
+
