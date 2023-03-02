@@ -1,0 +1,226 @@
+---
+title: "DDA"
+output: html_document
+date: "2023-03-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Any necessary libraries
+
+```{r}
+#libraries here
+```
+
+```{r}
+train <- read.csv("train.csv")
+test <- read.csv("test.csv")
+```
+
+
+#2. Data preparation an cleaning
+
+Firstly, we need to join the train and test dataset into one:
+
+```{r}
+#We can save the credit score column along the ID in another dataframe
+credit_score <- train[, c(1,28)]
+train <- train[, -c(28)]
+df <- rbind(train, test)
+```
+
+The following points will be checked to assess the data quality:
+
+- What type of data are we working with? Are data types correct? Do the values make sense, or are there erratic values?
+
+Firstly, we can eyeball the data to gain a general idea of what the variables we're working with look like:
+
+```{r}
+str(df)
+```
+As seen, we are dealing with a very heterogeneous dataset, containing both numerical and categorical variables. At first sight, there are some variables we do not really need to answer our research question, so we can proceed to delete them:
+
+```{r}
+df <- df[, -c(2)]
+df <- df[, -c(3)]
+df <- df[, -c(5)]
+df <- df[, -c(4)]
+
+#Note if any of you consider we can deleter more columns, add them here
+```
+
+Now, to properly elaborate a model later on, the datatypes have to be fixed: most categorical variables are defined as "chr", and so are some numerical variables as well. Before we do that, we should fix the particular mistakes spotted in each column of interest:
+
+##ID should be unique and numerical, it looks perfect (should we check it or not)
+##Cust Id, name
+
+```{r}
+#Remove "_", turn negative values to NA, and turn the variable to numeric
+df$Age <- gsub('_','',df$Age)
+df$Age[df$Age <= 0] <- NA
+df$Age <- as.numeric(df$Age)
+
+#Theres outliers, like underage people and elevated numbers
+```
+
+##Annual income - _with values
+
+```{r}
+df$Annual_Income <- gsub('_','',df$Annual_Income)
+
+df$Annual_Income <- as.numeric(df$Annual_Income)
+```
+
+
+##monthly inhand income - just Na
+
+##Num_Bank_Accounts,credit card,interest rate : outliers
+
+```{r}
+#NumBankAccounts
+
+#First turn negative umbers to 0
+df$Num_Bank_Accounts[df$Num_Bank_Accounts < 0] <- 0
+
+#Now we should decide what to do with the outliers
+
+
+```
+
+
+##no of loan : symbol and -ve values
+
+```{r}
+#first removing the symbols and turning the variable to numeric
+df$Num_of_Loan <- gsub('_','',df$Num_of_Loan)
+df$Num_of_Loan <- as.numeric(df$Num_of_Loan)
+
+#I assume that here the value "-100" is representing a missing value, as it is repeated very often
+df$Num_of_Loan[df$Num_of_Loan == "-100"] <- NA
+
+#Now we would have to decide what to do with outliers
+
+
+```
+
+##delay : -ve values consider turning them to 0
+
+```{r}
+df$Delay_from_due_date[df$Delay_from_due_date < 0] <- 0
+```
+
+###no of delay payment: it should be numeric and symbols are there
+
+```{r}
+#First remove the symbols and turn to numeric
+df$Num_of_Delayed_Payment <- gsub('_','',df$Num_of_Delayed_Payment)
+df$Num_of_Delayed_Payment <- as.numeric(df$Num_of_Delayed_Payment)
+
+#Now substitute " " with NA
+df$Num_of_Delayed_Payment[df$Num_of_Delayed_Payment < " "] <- NA
+
+#Lastly we should consider what to do with outliers
+
+
+```
+
+##change credit limit:it should be numeric and symbols are there
+
+```{r}
+#Replace "_" with NA
+df$Changed_Credit_Limit[df$Changed_Credit_Limit < "_"] <- NA
+df$Changed_Credit_Limit<- as.numeric(df$Changed_Credit_Limit)
+
+#outliers?
+```
+
+##no of inquire: outliers
+
+##credit mix : discuss
+
+##outstanding debt:there are symbols, should be numeric
+
+```{r}
+#First remove the symbols and turn to numeric
+df$Outstanding_Debt <- gsub('_','',df$Outstanding_Debt)
+df$Outstanding_Debt <- as.numeric(df$Outstanding_Debt)
+```
+
+##credit age:it should be made into months
+
+```{r}
+years <- sub("\\Years.*", "", df$Credit_History_Age)
+months <- sub(".*and ", "", df$Credit_History_Age) 
+months <- sub("\\Months*", "", months)
+
+years<- as.numeric(years)
+months<- as.numeric(months)
+
+df$Credit_History_Age <- years*12 + months
+```
+
+##payment of min:factor
+
+```{r}
+#Changing NM to NA
+df$Payment_of_Min_Amount[df$Payment_of_Min_Amount < "NM"] <- NA
+
+```
+
+##emi: all okay
+
+##Amount_invested_monthly: shuld be numeric, discuss the special character and missing values
+
+```{r}
+#Changing "!@9#%8" to NA
+df$Amount_invested_monthly[df$Amount_invested_monthly < "!@9#%8"] <- NA
+
+#changing "_1000_" to NA
+df$Amount_invested_monthly[df$Amount_invested_monthly < "_1000_"] <- NA
+
+#changing to numeric
+df$Amount_invested_monthly <- as.numeric(df$Amount_invested_monthly)
+
+```
+
+##Payment_Behaviour :categorical , missing values with special character
+
+```{r}
+#Changing "!@9#%8" to NA
+df$Payment_Behaviour[df$Payment_Behaviour == "!@9#%8"] <- NA
+
+```
+
+##Monthly balance: should be numeric, it has missing values 
+
+```{r}
+#Replacing empty spaces with missing values and turning to numeric
+df$Monthly_Balance[df$Monthly_Balance < " "] <- NA
+
+df$Monthly_Balance <- as.numeric(df$Monthly_Balance)
+```
+
+Lastly, for the variables that should be categorical, w can convert them into factors after correcting the mistakes:
+
+```{r}
+df$Month <- as.factor(df$Month)
+df$Type_of_Loan <- as.factor(df$Type_of_Loan)
+df$Credit_Mix <- as.factor(df$Credit_Mix)
+df$Payment_of_Min_Amount <- as.factor(df$Payment_of_Min_Amount)
+df$Payment_Behaviour <- as.factor(df$Payment_Behaviour)
+```
+
+We can finally take a look at the clean data, although it still contains outliers and NA's
+
+```{r}
+summary(df)
+```
+
+Further Questions to focus on now:
+
+- Are there more categories than expected for categorical variables? Are some categories duplicated
+
+
+- Are there any missing values? How am I going to deal with them? How about outliers?
