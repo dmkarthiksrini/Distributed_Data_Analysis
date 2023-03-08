@@ -12,6 +12,7 @@ Any necessary libraries
 
 ```{r}
 #libraries here
+library(ggplot2)
 ```
 
 ```{r}
@@ -38,17 +39,46 @@ The following points will be checked to assess the data quality:
 Firstly, we can eyeball the data to gain a general idea of what the variables we're working with look like:
 
 ```{r}
+df
+```
+
+
+```{r}
 str(df)
 ```
 As seen, we are dealing with a very heterogeneous dataset, containing both numerical and categorical variables. At first sight, there are some variables we do not really need to answer our research question, so we can proceed to delete them:
 
 ```{r}
-df <- df[, -c(2)]
-df <- df[, -c(3)]
-df <- df[, -c(5)]
-df <- df[, -c(4)]
+#df <- df[, -c(2)]
+#df <- df[,-c(24)]
+#df <- df[, -c(4)]
+#df <- df[, -c(5)]
+#Note if any of you consider we can delete more columns, add them here
+```
 
-#Note if any of you consider we can deleter more columns, add them here
+## Removing unwanted Columns
+
+* We are not removing Monthly_Balance, Payment_Behaviour, Total_EMI_per_month(equated monthly installment) since we are looking for the model on based of loan amount and payment behaviour
+* Removing the Amount_invested_monthly and other credit card related columns which talks more about the creadit card perspective histories (Num_Credit_Card, Changed_Credit_Limit, Num_Credit_Inquiries, Credit_Mix, Credit_Utilization_Ratio ) since our focus mainly on the retail banking not on investment of the cx
+* Removing Num_Bank_Accounts as we are more focus on the outstanding debt and payment behaviour rather than the number of accounts customer hold
+* Removing Interest_Rate since we have the EMI amount available
+* Type_of_Loan is also removed as it is not creating anything potential value for the Modelling
+
+
+```{r}
+names(df)
+```
+```{r}
+df_model <- df[,!names(df) %in% c("Amount_invested_monthly", "SSN", "Name", "Month", "Age", "Num_Bank_Accounts", "Num_Credit_Card", "Interest_Rate", "Type_of_Loan", "Changed_Credit_Limit", "Num_Credit_Inquiries", "Credit_Mix", "Credit_Utilization_Ratio" )]
+```
+
+
+```{r}
+df_model
+```
+
+```{r}
+names(df_model)
 ```
 
 Now, to properly elaborate a model later on, the datatypes have to be fixed: most categorical variables are defined as "chr", and so are some numerical variables as well. Before we do that, we should fix the particular mistakes spotted in each column of interest:
@@ -58,9 +88,9 @@ Now, to properly elaborate a model later on, the datatypes have to be fixed: mos
 
 ```{r}
 #Remove "_", turn negative values to NA, and turn the variable to numeric
-df$Age <- gsub('_','',df$Age)
-df$Age[df$Age <= 0] <- NA
-df$Age <- as.numeric(df$Age)
+#df$Age <- gsub('_','',df$Age)
+#df$Age[df$Age <= 0] <- NA
+#df$Age <- as.numeric(df$Age)
 
 #Theres outliers, like underage people and elevated numbers
 ```
@@ -68,9 +98,11 @@ df$Age <- as.numeric(df$Age)
 ##Annual income - _with values
 
 ```{r}
-df$Annual_Income <- gsub('_','',df$Annual_Income)
+#df$Annual_Income <- gsub('_','',df$Annual_Income)
+#df$Annual_Income <- as.numeric(df$Annual_Income)
 
-df$Annual_Income <- as.numeric(df$Annual_Income)
+df_model$Annual_Income <- gsub('_','',df_model$Annual_Income)
+df_model$Annual_Income <- as.numeric(df_model$Annual_Income)
 ```
 
 
@@ -82,7 +114,7 @@ df$Annual_Income <- as.numeric(df$Annual_Income)
 #NumBankAccounts
 
 #First turn negative umbers to 0
-df$Num_Bank_Accounts[df$Num_Bank_Accounts < 0] <- 0
+#df$Num_Bank_Accounts[df$Num_Bank_Accounts < 0] <- 0
 
 #Now we should decide what to do with the outliers
 
@@ -94,11 +126,11 @@ df$Num_Bank_Accounts[df$Num_Bank_Accounts < 0] <- 0
 
 ```{r}
 #first removing the symbols and turning the variable to numeric
-df$Num_of_Loan <- gsub('_','',df$Num_of_Loan)
-df$Num_of_Loan <- as.numeric(df$Num_of_Loan)
+df_model$Num_of_Loan <- gsub('_','',df_model$Num_of_Loan)
+df_model$Num_of_Loan <- as.numeric(df_model$Num_of_Loan)
 
 #I assume that here the value "-100" is representing a missing value, as it is repeated very often
-df$Num_of_Loan[df$Num_of_Loan == "-100"] <- NA
+df_model$Num_of_Loan[df_model$Num_of_Loan == "-100"] <- NA
 
 #Now we would have to decide what to do with outliers
 
@@ -108,18 +140,18 @@ df$Num_of_Loan[df$Num_of_Loan == "-100"] <- NA
 ##delay : -ve values consider turning them to 0
 
 ```{r}
-df$Delay_from_due_date[df$Delay_from_due_date < 0] <- 0
+df_model$Delay_from_due_date[df_model$Delay_from_due_date < 0] <- 0
 ```
 
 ###no of delay payment: it should be numeric and symbols are there
 
 ```{r}
 #First remove the symbols and turn to numeric
-df$Num_of_Delayed_Payment <- gsub('_','',df$Num_of_Delayed_Payment)
-df$Num_of_Delayed_Payment <- as.numeric(df$Num_of_Delayed_Payment)
+df_model$Num_of_Delayed_Payment <- gsub('_','',df_model$Num_of_Delayed_Payment)
+df_model$Num_of_Delayed_Payment <- as.numeric(df_model$Num_of_Delayed_Payment)
 
 #Now substitute " " with NA
-df$Num_of_Delayed_Payment[df$Num_of_Delayed_Payment < " "] <- NA
+df_model$Num_of_Delayed_Payment[df_model$Num_of_Delayed_Payment < " "] <- 0
 
 #Lastly we should consider what to do with outliers
 
@@ -130,12 +162,12 @@ df$Num_of_Delayed_Payment[df$Num_of_Delayed_Payment < " "] <- NA
 
 ```{r}
 #Replace "_" with NA
-df$Changed_Credit_Limit[df$Changed_Credit_Limit < "_"] <- NA
+#df$Changed_Credit_Limit[df$Changed_Credit_Limit < "_"] <- NA
 
 #What do we do with negative values??
 
 
-df$Changed_Credit_Limit<- as.numeric(df$Changed_Credit_Limit)
+#df$Changed_Credit_Limit<- as.numeric(df$Changed_Credit_Limit)
 
 #outliers?
 ```
@@ -148,44 +180,54 @@ df$Changed_Credit_Limit<- as.numeric(df$Changed_Credit_Limit)
 
 ```{r}
 #First remove the symbols and turn to numeric
-df$Outstanding_Debt <- gsub('_','',df$Outstanding_Debt)
-df$Outstanding_Debt <- as.numeric(df$Outstanding_Debt)
+df_model$Outstanding_Debt <- gsub('_','',df_model$Outstanding_Debt)
+df_model$Outstanding_Debt <- as.numeric(df_model$Outstanding_Debt)
 ```
 
 ##credit age:it should be made into months
 
 ```{r}
-years <- sub("\\Years.*", "", df$Credit_History_Age)
-months <- sub(".*and ", "", df$Credit_History_Age) 
+years <- sub("\\Years.*", "", df_model$Credit_History_Age)
+months <- sub(".*and ", "", df_model$Credit_History_Age) 
 months <- sub("\\Months*", "", months)
 
 years<- as.numeric(years)
 months<- as.numeric(months)
 
-df$Credit_History_Age <- years*12 + months
+df_model$Credit_History_Age <- years*12 + months
 ```
 
 ##payment of min:factor
 
 ```{r}
-#Changing NM to NA
-df$Payment_of_Min_Amount[df$Payment_of_Min_Amount < "NM"] <- NA
-
+table(df$Payment_of_Min_Amount)
 ```
 
-##emi: all okay
+
+```{r}
+#Changing Payment_of_Min_Amount to Numerical
+df_model$Payment_of_Min_Amount[df_model$Payment_of_Min_Amount == "NM"] <- 0
+df_model$Payment_of_Min_Amount[df_model$Payment_of_Min_Amount == "Yes"] <- 1
+df_model$Payment_of_Min_Amount[df_model$Payment_of_Min_Amount == "No"] <- 2
+```
+
+```{r}
+table(df_model$Payment_of_Min_Amount)
+```
+
+##emi: all okay [Perfect]
 
 ##Amount_invested_monthly: shuld be numeric, discuss the special character and missing values
 
 ```{r}
 #Changing "!@9#%8" to NA
-df$Amount_invested_monthly[df$Amount_invested_monthly < "!@9#%8"] <- NA
+#df$Amount_invested_monthly[df$Amount_invested_monthly < "!@9#%8"] <- NA
 
 #changing "_1000_" to NA
-df$Amount_invested_monthly[df$Amount_invested_monthly < "_1000_"] <- NA
+#df$Amount_invested_monthly[df$Amount_invested_monthly < "_1000_"] <- NA
 
 #changing to numeric
-df$Amount_invested_monthly <- as.numeric(df$Amount_invested_monthly)
+#df$Amount_invested_monthly <- as.numeric(df$Amount_invested_monthly)
 
 ```
 
@@ -193,39 +235,123 @@ df$Amount_invested_monthly <- as.numeric(df$Amount_invested_monthly)
 
 ```{r}
 #Changing "!@9#%8" to NA
-df$Payment_Behaviour[df$Payment_Behaviour == "!@9#%8"] <- NA
-
+#df$Payment_Behaviour[df$Payment_Behaviour == "!@9#%8"] <- NA
 ```
+
+```{r}
+table(df_model$Payment_Behaviour)
+```
+
+```{r}
+# Droping Rows containing "!@9#%8"
+df_model <-  df_model[!(df_model$Payment_Behaviour=="!@9#%8"),]
+```
+
+```{r}
+table(df_model$Payment_Behaviour)
+```
+
+```{r}
+#Converting the Payment_Behaviour to Ordinal Variable
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "High_spent_Large_value_payments"] <- 6
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "High_spent_Medium_value_payments"] <- 5
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "High_spent_Small_value_payments"] <- 4
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "Low_spent_Large_value_payments"] <- 3
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "Low_spent_Medium_value_payments"] <- 2
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "Low_spent_Small_value_payments"] <- 1
+```
+
+```{r}
+table(df_model$Payment_Behaviour)
+```
+
 
 ##Monthly balance: should be numeric, it has missing values 
 
 ```{r}
+table(df_model$Monthly_Balance[df_model$Monthly_Balance < " "])
+```
+
+
+```{r}
 #Replacing empty spaces with missing values and turning to numeric
-df$Monthly_Balance[df$Monthly_Balance < " "] <- NA
+df_model$Monthly_Balance[df_model$Monthly_Balance < " "] <- NA
 
 
-df$Monthly_Balance <- as.numeric(df$Monthly_Balance)
+df_model$Monthly_Balance <- as.numeric(df_model$Monthly_Balance)
 ```
 
 Lastly, for the variables that should be categorical, w can convert them into factors after correcting the mistakes:
 
 ```{r}
-df$Month <- as.factor(df$Month)
-df$Type_of_Loan <- as.factor(df$Type_of_Loan)
-df$Credit_Mix <- as.factor(df$Credit_Mix)
-df$Payment_of_Min_Amount <- as.factor(df$Payment_of_Min_Amount)
-df$Payment_Behaviour <- as.factor(df$Payment_Behaviour)
+#df$Month <- as.factor(df$Month)
+#df$Type_of_Loan <- as.factor(df$Type_of_Loan)
+#df$Credit_Mix <- as.factor(df$Credit_Mix)
+df_model$Payment_of_Min_Amount <- as.factor(df_model$Payment_of_Min_Amount)
+df_model$Payment_Behaviour <- as.factor(df_model$Payment_Behaviour)
 ```
+
+```{r}
+table(df_model$Occupation)
+```
+
+```{r}
+#Dropping the Rows where occupation is mentioned as "_______"
+df_model <-  df_model[!(df_model$Occupation=="_______"),]
+```
+
+```{r}
+table(df_model$Occupation)
+```
+
 
 We can finally take a look at the clean data, although it still contains outliers and NA's
 
 ```{r}
-summary(df)
+summary(df_model)
 ```
+
+
+```{r}
+table(df_model$Num_of_Loan)
+```
+
+
+```{r}
+ggplot(df_model, aes(x=df_model$Num_of_Loan)) + 
+  geom_density()
+```
+
+```{r}
+df_model$Num_of_Loan[df_model$Num_of_Loan > 9] <- 7
+```
+
+```{r}
+pic <- ggplot(df_model, aes(x=df_model$Num_of_Loan)) + 
+  geom_density() 
+pic + geom_vline(aes(xintercept=mean(df_model$Num_of_Loan)),
+            color="blue", linetype="dashed", size=1)
+```
+
+```{r}
+table(df_model$Num_of_Loan)
+```
+
 
 Further Questions to focus on now:
 
 - Are there more categories than expected for categorical variables? Are some categories duplicated
 
+* Post cleaning we have three Categorical Variables
+  * Occupation
+  * Payment_of_Min_Amount
+  * Payment_Behaviour
+
 
 - Are there any missing values? How am I going to deal with them? How about outliers?
+
+* There were Outliers in Num_of_Loan which has been addressed by imputing with the Mean Value
+* Other Outliers which we are looking at now are as follows
+    * Total_EMI_per_month
+    * Num_of_Delayed_Payment
+    * Annual_Income
