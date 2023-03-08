@@ -52,6 +52,18 @@ Thus, given the importance of credit score and the relationship between an indiv
 | Amount_invested_monthly  | Represents the   monthly amount invested by the customer (in USD)     | Numeric            |                  |
 | Payment_Behaviour        | Represents the   payment behavior of the customer (in USD)            | Character          | Factors          |
 | Monthly_Balance          | Represents the   monthly balance amount of the customer (in USD)      | Numeric            |                  |
+
+
+#### Addition Info
+
+#####_Regarding Payment Behaviour_
+
+* Low spent small value payments: 1 (infrequent spending and payment behavior may indicate low credit usage or creditworthiness)
+* Low spent medium value payments: 2 (infrequent spending and payment behavior may indicate a lower level of financial engagement)
+* Low spent large value payments: 3 (making infrequent payments can be a risk factor, but paying off large bills or making big purchases can also be a sign of financial stability)
+* High spent small value payments: 4 (high spending and regular payment behavior can indicate good creditworthiness, but there may be a risk of overspending or carrying a balance)
+* High spent medium value payments: 5 (frequent spending and regular payment behavior, coupled with moderate spending amounts, can indicate responsible credit usage and strong creditworthiness)
+* High spent Large value payments: 6 (Frequent spending and regular payment behavior, can indicate good creditworthiness)
 ### Factors (Reason behind considering this columns as Factors is we can convert this a Levels)
 
 - Occupation
