@@ -1,0 +1,407 @@
+---
+title: "DDA"
+output: html_document
+date: "2023-03-02"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Any necessary libraries
+
+```{r}
+#libraries here
+library(ggplot2)
+library(dplyr)
+```
+
+```{r}
+train <- read.csv("train.csv")
+test <- read.csv("test.csv")
+```
+
+
+#2. Data preparation an cleaning
+
+Firstly, we need to join the train and test dataset into one:
+
+```{r}
+#We can save the credit score column along the ID in another dataframe
+credit_score <- train[, c(1,28)]
+train <- train[, -c(28)]
+df <- rbind(train, test)
+```
+
+The following points will be checked to assess the data quality:
+
+- What type of data are we working with? Are data types correct? Do the values make sense, or are there erratic values?
+
+Firstly, we can eyeball the data to gain a general idea of what the variables we're working with look like:
+
+```{r}
+df
+```
+
+
+```{r}
+str(df)
+```
+
+As seen, we are dealing with a very heterogeneous dataset, containing both numerical and categorical variables. At first sight, there are some variables we do not really need to answer our research question, so we can proceed to delete them:
+
+
+## Removing unwanted Columns
+
+* We are not removing Monthly_Balance, Payment_Behaviour, Total_EMI_per_month(equated monthly installment) since we are looking for the model on based of loan amount and payment behaviour
+* Removing the Amount_invested_monthly and other credit card related columns which talks more about the creadit card perspective histories (Num_Credit_Card, Changed_Credit_Limit, Num_Credit_Inquiries, Credit_Mix, Credit_Utilization_Ratio ) since our focus mainly on the retail banking not on investment of the cx
+* Removing Num_Bank_Accounts as we are more focus on the outstanding debt and payment behaviour rather than the number of accounts customer hold
+* Removing Interest_Rate since we have the EMI amount available
+* Type_of_Loan is also removed as it is not creating anything potential value for the Modelling
+
+
+```{r}
+names(df)
+```
+
+```{r}
+df_model <- df[,!names(df) %in% c("Amount_invested_monthly", "SSN", "Name", "Month", "Age", "Num_Bank_Accounts", "Num_Credit_Card", "Interest_Rate", "Type_of_Loan", "Changed_Credit_Limit", "Num_Credit_Inquiries", "Credit_Mix", "Credit_Utilization_Ratio" )]
+```
+
+
+```{r}
+df_model
+```
+
+```{r}
+names(df_model)
+```
+
+Now, to properly elaborate a model later on, the datatypes have to be fixed: most categorical variables are defined as "chr", and so are some numerical variables as well. Before we do that, we should fix the particular mistakes spotted in each column of interest:
+
+##Cleaning errors and fixing variable types
+
+- Annual income - _with values
+
+```{r}
+df_model$Annual_Income <- gsub('_','',df_model$Annual_Income)
+df_model$Annual_Income <- as.numeric(df_model$Annual_Income)
+```
+
+
+- no of loan : symbol and -ve values
+
+```{r}
+#first removing the symbols and turning the variable to numeric
+df_model$Num_of_Loan <- gsub('_','',df_model$Num_of_Loan)
+df_model$Num_of_Loan <- as.numeric(df_model$Num_of_Loan)
+
+#I assume that here the value "-100" is representing a missing value, as it is repeated very often
+df_model$Num_of_Loan[df_model$Num_of_Loan == "-100"] <- NA
+```
+
+- delay : -ve values consider turning them to 0
+
+```{r}
+df_model$Delay_from_due_date[df_model$Delay_from_due_date < 0] <- 0
+```
+
+- no of delay payment: it should be numeric and symbols are there
+
+```{r}
+#First remove the symbols and turn to numeric
+df_model$Num_of_Delayed_Payment <- gsub('_','',df_model$Num_of_Delayed_Payment)
+df_model$Num_of_Delayed_Payment <- as.numeric(df_model$Num_of_Delayed_Payment)
+
+#Now substitute " " with NA
+df_model$Num_of_Delayed_Payment[df_model$Num_of_Delayed_Payment == " "] <- NA
+
+```
+
+
+- outstanding debt:there are symbols, should be numeric
+
+```{r}
+#First remove the symbols and turn to numeric
+df_model$Outstanding_Debt <- gsub('_','',df_model$Outstanding_Debt)
+df_model$Outstanding_Debt <- as.numeric(df_model$Outstanding_Debt)
+```
+
+- credit age:it should be made into months
+
+```{r}
+years <- sub("\\Years.*", "", df_model$Credit_History_Age)
+months <- sub(".*and ", "", df_model$Credit_History_Age) 
+months <- sub("\\Months*", "", months)
+
+years<- as.numeric(years)
+months<- as.numeric(months)
+
+df_model$Credit_History_Age <- years*12 + months
+```
+
+- payment of min:factor
+
+```{r}
+table(df$Payment_of_Min_Amount)
+```
+
+
+```{r}
+#Changing Payment_of_Min_Amount to Numerical
+df_model$Payment_of_Min_Amount[df_model$Payment_of_Min_Amount == "NM"] <- 0
+df_model$Payment_of_Min_Amount[df_model$Payment_of_Min_Amount == "Yes"] <- 1
+df_model$Payment_of_Min_Amount[df_model$Payment_of_Min_Amount == "No"] <- 2
+```
+
+```{r}
+table(df_model$Payment_of_Min_Amount)
+```
+
+- Payment_Behaviour :categorical , missing values with special character
+
+```{r}
+table(df_model$Payment_Behaviour)
+```
+
+```{r}
+# Droping Rows containing "!@9#%8", as we have not way of imputing those values
+df_model <-  df_model[!(df_model$Payment_Behaviour=="!@9#%8"),]
+```
+
+```{r}
+table(df_model$Payment_Behaviour)
+```
+
+```{r}
+#Converting the Payment_Behaviour to Ordinal Variable
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "High_spent_Large_value_payments"] <- 6
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "High_spent_Medium_value_payments"] <- 5
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "High_spent_Small_value_payments"] <- 4
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "Low_spent_Large_value_payments"] <- 3
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "Low_spent_Medium_value_payments"] <- 2
+df_model$Payment_Behaviour[df_model$Payment_Behaviour == "Low_spent_Small_value_payments"] <- 1
+```
+
+```{r}
+table(df_model$Payment_Behaviour)
+```
+
+
+##Monthly balance: should be numeric, it has missing values 
+
+```{r}
+table(df_model$Monthly_Balance[df_model$Monthly_Balance == " "])
+```
+
+
+```{r}
+#Replacing empty spaces with missing values and turning to numeric
+df_model$Monthly_Balance[df_model$Monthly_Balance == " "] <- NA
+
+
+df_model$Monthly_Balance <- as.numeric(df_model$Monthly_Balance)
+```
+
+Lastly, for the variables that should be categorical, we can convert them into factors after correcting the mistakes:
+
+```{r}
+df_model$Payment_of_Min_Amount <- as.factor(df_model$Payment_of_Min_Amount)
+df_model$Payment_Behaviour <- as.factor(df_model$Payment_Behaviour)
+```
+
+```{r}
+table(df_model$Occupation)
+```
+
+```{r}
+#Dropping the Rows where occupation is mentioned as "_______"
+df_model <-  df_model[!(df_model$Occupation=="_______"),]
+```
+
+```{r}
+table(df_model$Occupation)
+```
+
+We can finally take a look at the clean data, although it still contains outliers and NA's
+
+```{r}
+summary(df_model)
+```
+
+
+Further Questions to focus on now:
+
+- Are there more categories than expected for categorical variables? Are some categories duplicated? Answer: All good
+
+* Post cleaning we have three Categorical Variables
+ 
+  * Occupation (all good)
+```{r}
+table(df_model$Occupation)
+```
+  
+  * Payment_of_Min_Amount (all good)
+```{r}
+table(df_model$Payment_of_Min_Amount)
+```
+  
+  * Payment_Behaviour (all good)
+```{r}
+table(df_model$Payment_Behaviour)
+```
+  
+
+
+- Are there any missing values? How am I going to deal with them? How about outliers?
+ 
+ First, the missing values will be treated:
+
+  * Monthly Inhand salary 
+```{r}
+#Monthly inhand salary is going to be replaced by the median value of the monthly inhand salary for that specific person (using the customer ID)
+
+df_model$Customer_ID <- as.factor(df_model$Customer_ID)
+
+#first, the groupby is done and the median is calculated
+median_Inhand_salary_by_customer <- df_model %>%
+  group_by(Customer_ID) %>%
+  summarise(median_salary = median(Monthly_Inhand_Salary, na.rm = TRUE))
+#temporarily join that column to the dataset
+df_model <- df_model %>%
+  left_join(median_Inhand_salary_by_customer, by = c("Customer_ID"))
+#substitute NAs with the median and then drop the column
+df_model$Monthly_Inhand_Salary[is.na(df_model$Monthly_Inhand_Salary)] <- df_model$median_salary[is.na(df_model$Monthly_Inhand_Salary)]
+df_model <- df_model[,!names(df_model) %in% c("median_salary" )]
+
+```
+ 
+This same process is going to be repeated for all the missing values, so we have a more accurate dataframe than just removing the NAs or substituting by the median of the whole thing.
+
+```{r}
+#Num of Loan is going to be replaced by the median value  for that specific person (using the customer ID)
+
+median_numLoan <- df_model %>%
+  group_by(Customer_ID) %>%
+  summarise(median_numLoan = median(Num_of_Loan, na.rm = TRUE))
+#temporarily join that column to the dataset
+df_model <- df_model %>%
+  left_join(median_numLoan, by = c("Customer_ID"))
+#substitute NAs with the median and then drop the column
+df_model$Num_of_Loan[is.na(df_model$Num_of_Loan)] <- df_model$median_numLoan[is.na(df_model$Num_of_Loan)]
+df_model <- df_model[,!names(df_model) %in% c("median_numLoan" )]
+
+```
+
+```{r}
+#Num ofdelayed payments is going to be replaced by the median value for that specific person (using the customer ID)
+
+median_delayed <- df_model %>%
+  group_by(Customer_ID) %>%
+  summarise(median_delayed = median(Num_of_Delayed_Payment, na.rm = TRUE))
+#temporarily join that column to the dataset
+df_model <- df_model %>%
+  left_join(median_delayed, by = c("Customer_ID"))
+#substitute NAs with the median and then drop the column
+df_model$Num_of_Delayed_Payment[is.na(df_model$Num_of_Delayed_Payment)] <- df_model$median_delayed[is.na(df_model$Num_of_Delayed_Payment)]
+df_model <- df_model[,!names(df_model) %in% c("median_delayed" )]
+
+```
+
+```{r}
+#Credit history age is going to be replaced by the median value  for that specific person (using the customer ID)
+
+median_credit_age <- df_model %>%
+  group_by(Customer_ID) %>%
+  summarise(median_credit_age = median(Credit_History_Age, na.rm = TRUE))
+#temporarily join that column to the dataset
+df_model <- df_model %>%
+  left_join(median_credit_age, by = c("Customer_ID"))
+#substitute NAs with the median and then drop the column
+df_model$Credit_History_Age[is.na(df_model$Credit_History_Age)] <- df_model$median_credit_age[is.na(df_model$Credit_History_Age)]
+df_model <- df_model[,!names(df_model) %in% c("median_credit_age" )]
+
+```
+
+```{r}
+#Monthly balance is going to be replaced by the median value  for that specific person (using the customer ID)
+
+median_balance <- df_model %>%
+  group_by(Customer_ID) %>%
+  summarise(median_balance = median(Monthly_Balance, na.rm = TRUE))
+#temporarily join that column to the dataset
+df_model <- df_model %>%
+  left_join(median_balance, by = c("Customer_ID"))
+#substitute NAs with the median and then drop the column
+df_model$Monthly_Balance[is.na(df_model$Monthly_Balance)] <- df_model$median_balance[is.na(df_model$Monthly_Balance)]
+df_model <- df_model[,!names(df_model) %in% c("median_balance" )]
+
+```
+
+now we have a dataframe clean of missing values
+
+```{r}
+summary(df_model)
+```
+
+Now, looking at the outliers:
+
+*Num_of_Loan: imputing with the Mean (I commented this to do the IQRs, instead of a mean imputation)
+
+```{r}
+#ggplot(df_model, aes(x=df_model$Num_of_Loan)) + 
+#  geom_density()
+```
+
+```{r}
+#input by mean
+#df_model$Num_of_Loan[df_model$Num_of_Loan > 9] <- 7
+```
+
+```{r}
+#pic <- ggplot(df_model, aes(x=df_model$Num_of_Loan)) + 
+ # geom_density() 
+#pic + geom_vline(aes(xintercept=mean(df_model$Num_of_Loan)),
+ #           color="blue", linetype="dashed", size=1)
+```
+
+For the variables "num of delayed payment", "total EMI per moth", "number of Loans" and "Annual income", we are going to remove the outliers based on the IQRs 
+
+
+```{r}
+outliers_delayed <- boxplot.stats(df_model$Num_of_Delayed_Payment)$out
+outliers_delayed_rows <- which(df_model$Num_of_Delayed_Payment %in% c(outliers_delayed))
+df_model <- df_model[-c(outliers_delayed_rows), ]
+
+outliers_income <- boxplot.stats(df_model$Annual_Income)$out
+outliers_income_rows <- which(df_model$Annual_Income %in% c(outliers_income))
+df_model <- df_model[-c(outliers_income_rows), ]
+
+
+outliers_EMI <- boxplot.stats(df_model$Total_EMI_per_month)$out
+outliers_EMI_rows <- which(df_model$Total_EMI_per_month %in% c(outliers_EMI))
+df_model <- df_model[-c(outliers_EMI_rows), ]
+
+outliers_loans <- boxplot.stats(df_model$Num_of_Loan)$out
+outliers_loans_rows <- which(df_model$Num_of_Loan %in% c(outliers_loans))
+df_model <- df_model[-c(outliers_loans_rows), ]
+```
+
+Now, we have a dataframe clean of missing values and outliers
+
+```{r}
+summary(df_model)
+```
+
+```{r}
+#write.csv(df_model, "df_model.csv")
+```
+
+
+#3. EDA
+
+The following questions will have to be answered:
+
+- How is each variable distributed?
+- What is the correlation between variables? (Correlation matrix)
+- We have to apply an unsupervised method (clustering perhaps?)
