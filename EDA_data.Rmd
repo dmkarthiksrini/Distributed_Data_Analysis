@@ -1,0 +1,253 @@
+---
+title: "EDA_data"
+author: "Tanvi Mathur"
+date: "2023-03-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+library(GGally)
+library(factoextra)
+library(cluster)
+
+```
+
+
+#3. EDA
+
+The following questions will have to be answered:
+
+- How is each variable distributed?
+- What is the correlation between variables? (Correlation matrix)
+- We have to apply an unsupervised method (clustering perhaps?)
+
+```{r}
+clean_model <- read.csv("df_model.csv")
+```
+
+```{r}
+summary(clean_model)
+```
+
+```{r}
+# Check number of unique values for variable "Customer_ID"
+length(unique(clean_model$Customer_ID))
+```
+There are around 103,010 values which are not unique.
+
+
+# Variable Distribution
+
+```{r}
+# Bar chart for variable "Occupation"
+ggplot(clean_model)+ geom_bar(aes(x=Occupation), colour="black", fill="light blue") +
+  labs(title = "Occupation") +
+  scale_y_continuous(name="Frequency") +
+  theme_light()
+```
+the proportion of each occupation is roughly equal, then you can assume that the data is balanced.
+
+```{r}
+# Histogram for variable "Annual_Income"
+ggplot(clean_model, aes(x=Annual_Income)) + 
+  geom_histogram(aes(y=..density..),      
+                 #binwidth=1,
+                 colour="black", fill="light blue") +
+  geom_density(alpha=.2, fill="blue") +   
+  xlab("Annual Income") +
+  theme_light()
+
+```
+The data is right skewed, that's the number of people decreases with higher annual incomes.
+```{r}
+# Histogram for variable "Monthly_Inhand_Salary"
+ggplot(clean_model, aes(x=Monthly_Inhand_Salary)) + 
+  geom_histogram(aes(y=..density..),      
+                 #binwidth=1,
+                 colour="black", fill="light blue") +
+  geom_density(alpha=.2, fill="blue") +   
+  xlab("Monthly In-hand salary") +
+  theme_light()
+
+```
+The data is right skewed, that's the number of people decreases with higher monthly incomes.
+```{r}
+# Histogram for variable "Num_of_Loan"
+ggplot(clean_model)+ geom_bar(aes(x=Num_of_Loan), colour="black", fill="light blue") +
+  labs(title = "Number of Loans") +
+  scale_y_continuous(name="Frequency") +
+  theme_light()
+```
+There are more people with number of loans ranging from 2 to 4.
+
+```{r}
+# Histogram for variable "Delay_from_due_date"
+ggplot(clean_model, aes(x=Delay_from_due_date)) + 
+  geom_histogram(aes(y=..density..),      
+                 #binwidth=1,
+                 colour="black", fill="light blue") +
+  geom_density(alpha=.2, fill="blue") +   
+  xlab("Delay from due date") +
+  ggtitle("Delay from due date") +
+  theme_light()
+
+```
+
+
+```{r}
+# Histogram for variable "Num_of_Delayed_Payment"
+ggplot(clean_model, aes(x=Num_of_Delayed_Payment)) + 
+  geom_histogram(aes(y=..density..),      
+                 #binwidth=1,
+                 colour="black", fill="light blue") +
+  geom_density(alpha=.2, fill="blue") +   
+  xlab("Number of delayed payments") +
+  theme_light()
+
+```
+
+
+```{r}
+# Histogram for variable "Outstanding_Debt"
+ggplot(clean_model, aes(x=Outstanding_Debt)) + 
+  geom_histogram(aes(y=..density..),      
+                 #binwidth=1,
+                 colour="black", fill="light blue") +
+  geom_density(alpha=.2, fill="blue") +   
+  xlab("Outstanding debt") +
+  theme_light()
+
+```
+
+```{r}
+# Histogram for variable "Credit_History_Age"
+ggplot(clean_model, aes(x=Credit_History_Age)) + 
+  geom_histogram(aes(y=..density..),      
+                 #binwidth=1,
+                 colour="black", fill="light blue") +
+  geom_density(alpha=.2, fill="blue") +   
+  xlab("Credit History age") +
+  theme_light()
+
+```
+
+
+```{r}
+# Histogram for variable "Payment_of_Min_Amount"
+ggplot(clean_model)+ geom_bar(aes(x=Payment_of_Min_Amount), colour="black", fill="light blue") +
+  labs(title = "Payment of min amount") +
+  scale_y_continuous(name="Frequency") +
+  theme_light()
+```
+
+
+```{r}
+# Histogram for variable "Total_EMI_per_month"
+ggplot(clean_model, aes(x=Total_EMI_per_month)) + 
+  geom_histogram(aes(y=..density..),      
+                 #binwidth=1,
+                 colour="black", fill="light blue") +
+  geom_density(alpha=.2, fill="blue") +   
+  xlab("Total EMI per month") +
+  theme_light()
+
+```
+
+
+```{r}
+# Histogram for variable "Monthly_Balance"
+ggplot(clean_model, aes(x=Monthly_Balance)) + 
+  geom_histogram(aes(y=..density..),      
+                 #binwidth=1,
+                 colour="black", fill="light blue") +
+  geom_density(alpha=.2, fill="blue") +   
+  xlab("Monthly_Balance") +
+  theme_light()
+
+```
+
+```{r}
+# Histogram for Payment_Behaviour
+ggplot(clean_model)+ geom_bar(aes(x=Payment_Behaviour), colour="black", fill="light blue") +
+  labs(title = "Payment behaviour") +
+  scale_y_continuous(name="Frequency") +
+  theme_light()
+```
+
+#Correlation among numerical variables 
+
+```{r}
+corr_model <- clean_model[,!names(clean_model) %in% c("X", "ID","Customer_ID","Occupation", "Num_of_Loan", "Payment_of_Min_Amount", "Payment_Behaviour")]
+
+# Calculate the correlation matrix
+cor_matrix <- cor(corr_model)
+
+# Create a correlation plot
+corrplot(cor_matrix, method = "color",type = "upper",
+        tl.col = "black",  tl.srt = 45, addCoef.col = "black")
+```
+outstanding correlations:
+- Annual income and MOnthly inhand salary are prefectly correlated, so one of them can be eliminated prior to modeling
+- Monthly balance and annual income
+- Outstanding debt and delay from due date (as expected)
+- Outstanding debt and credit history age seem to be negatively correlated, thus newer accounts seem to have more debt
+
+# What further knowledge can we imply from the data?
+ - Is there any occupation that is prone to delay in payment
+```{r}
+ggplot(clean_model, aes(x = Occupation, y = Num_of_Delayed_Payment)) +
+  geom_boxplot(fill = "lightblue") +
+  labs(title = "Occupations with Delayed Payments",
+       x = "Occupation",
+       y = "Number of Delayed Payments")
+```
+
+ - Is there any occupation that has more loans than other
+
+```{r}
+ggplot(clean_model, aes(x = Occupation, y = Num_of_Loan)) +
+  geom_boxplot(fill = "lightblue") +
+  labs(title = "Occupations with Delayed Payments",
+       x = "Occupation",
+       y = "Number of Delayed Payments")
+```
+
+
+# Unsupervised learning - cluster analysis
+
+```{r}
+# 2. cluster analysis
+### 2.1 hierarchical clustering - complete linkage
+###   note: exclude the Region attribute
+
+#We rake a sample of the first 10k rows, as the dataset is too big and it would take much more time
+dummy_df <- clean_model[1:10000,]
+
+#we clean the first columns as they have no importance now (ID, customer ID, "X", and occupation)
+dummy_df <- dummy_df[, -c(1,2,3,4)]
+
+
+dist_df <- dist(dummy_df, method = 'euclidian')
+
+#elbow method to check the optimal number of clusters
+fviz_nbclust(dummy_df, kmeans, method = "wss")
+```
+
+
+```{r}
+set.seed(2020)
+
+k_df1 <- kmeans(dummy_df, 3, nstart = 25)
+#25 different random starts to avoid missplacements and obtain a more robust solution
+
+sil <- silhouette(k_df1$cluster, dist_df)
+fviz_silhouette(sil)
+```
+As seen, there are no negative values for any cluster, which indicates that theres no missclassifications. moreover, the clusters are all above the avg coefficient line, which indicates that 3 might be the optimal number of clusters.
